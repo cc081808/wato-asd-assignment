@@ -1,121 +1,58 @@
-# WATonomous ASD: LiDAR navigation
+# WATonomous ASD Assignment
 
-An implementation of the WATonomous Autonomous Software Division onboarding assignment using ROS 2, C++, Gazebo, and Foxglove.
+This project makes a simulated robot drive to a chosen point while avoiding obstacles. It uses C++, ROS 2, Gazebo, and Foxglove, based on the [WATonomous starter code](https://github.com/WATonomous/wato_asd_training).
 
-The simulated robot receives a destination, builds a map from laser scans, plans a route around static obstacles, and follows it. Foxglove displays the sensor readings, maps, route, and movement commands.
+## How it works
 
-## Documentation
+The navigation code is in `src/robot/` and has four main parts:
 
-| What you want to do | Where to go |
-|---|---|
-| Run it and connect Foxglove | [Setup, commands, and troubleshooting](docs/RUNNING.md) |
-| Understand the engineering tradeoffs | [Decisions and limitations](docs/DECISIONS.md) |
-| See what was actually verified | [Verification report](docs/VERIFICATION.md) |
-| Reproduce the cleaner video display | [Recording and layout guide](docs/CLEAN-RECORDING.md) |
+- **Costmap:** uses LiDAR distance readings to mark obstacles on a small grid. It adds extra space around them so the robot has room to pass.
+- **Map memory:** saves these readings in a larger map as the robot moves.
+- **Planner:** uses A* to find a route from the robot to the goal. It updates the route as the map changes.
+- **Control:** uses Pure Pursuit to steer towards a point ahead on the route, then stops near the goal.
 
-## Task and scope
+The simulation supplies the robot's position. Foxglove shows the LiDAR, map, route, and robot movement.
 
-The goal is point-to-point navigation in the provided static Gazebo environment. Position is supplied by the simulation. The implementation uses the laser scanner for obstacles; it does not implement camera perception, localization, or SLAM.
+## Running it
 
-The official assignment and starter infrastructure are maintained by [WATonomous](https://github.com/WATonomous/wato_asd_training). See the [assignment instructions](https://wiki.watonomous.ca/admission_assignments/asd_admission_assignment/) for the original specification.
-
-## Architecture
-
-```mermaid
-flowchart LR
-  L[LiDAR measurements] --> C[Costmap]
-  C --> M[Map memory]
-  M --> P[A* planner]
-  G[Goal from Foxglove] --> P
-  P --> T[Pure Pursuit controller]
-  T --> R[Simulated robot]
-  R --> L
-  O[Supplied robot pose] --> M
-  O --> P
-  O --> T
-```
-
-| Component | Input | Output | Responsibility |
-|---|---|---|---|
-| Costmap | `/lidar` | `/costmap` | Convert distances to grid cells and add obstacle clearance |
-| Map memory | `/costmap`, pose/TF | `/map` | Transform observations into a persistent world grid |
-| Planner | `/map`, `/goal_point`, `/odom/filtered` | `/path` | Search for a route and replan |
-| Control | `/path`, `/odom/filtered`, `/lidar` | `/cmd_vel` | Track the route and stop when appropriate |
-
-## Repository layout
-
-```text
-config/learning.foxglove.json     Importable Foxglove layout
-compose.learning.yaml           Isolated local development/demo setup
-docs/                           Setup, design decisions, verification, recording
-evidence/                       Actual test results and recorded telemetry
-scripts/check_navigation.py     End-to-end simulator probe
-src/robot/
-  costmap/                      LiDAR processing
-  map_memory/                   Persistent grid
-  planner/                      A* search
-  control/                      Pure Pursuit and stopping logic
-  odometry_spoof/                Supplied pose helper, adjusted to body frame
-  bringup_robot/                Launches the nodes
-  navigation_tests/             Algorithm checks and warm-up publisher
-src/gazebo/                     Original simulated world
-```
-
-Each navigation package separates its ROS communication (`*_node`) from its algorithm (`*_core`). Headers declare interfaces; source files implement them.
-
-## Quick start
-
-From this directory in Linux/WSL, with Docker running:
+In a Linux or WSL Ubuntu terminal, from this project folder:
 
 ```bash
 docker compose -f compose.learning.yaml build robot
 docker compose -f compose.learning.yaml up -d
-docker compose -f compose.learning.yaml run --rm robot \
-  ros2 run navigation_tests navigation_checks
 ```
 
-Connect Foxglove using **Foxglove WebSocket** at `ws://localhost:8766` and import `config/learning.foxglove.json`. Use `sim_world` as the display frame and publish a point on `/goal_point` to choose a destination.
+In Foxglove, choose **Foxglove WebSocket** and connect to `ws://localhost:8766`. Import `config/clean-demo.foxglove.json` for the simpler display.
 
-Full commands, Windows paths, manual goals, the warm-up, and stopping instructions are in [RUNNING.md](docs/RUNNING.md).
+Use **Publish point** on `/goal_point` with the frame `sim_world` to choose a destination. The robot then drives itself; the joystick is for manual control.
 
-## Challenges addressed
+See [setup instructions](docs/RUNNING.md) for the full steps and commands.
 
-- **Coordinate frames:** sensor-relative measurements must be rotated and translated into world coordinates.
-- **Robot geometry:** the front-mounted LiDAR is not the correct body reference for steering; its offset matters.
-- **Unknown space:** unseen cells must remain distinguishable from observed free space.
-- **Clearance:** a route for a point must leave room for the entire robot.
-- **Planning edge cases:** blocked goals, unreachable areas, and diagonal corner cutting need explicit handling.
-- **Changing information:** the route must update as new obstacles appear in the map.
-- **Stopping:** empty paths and missing inputs must cancel motion.
-- **Development environment:** C++ compilation, ROS dependencies, containers, and Windows/Linux line endings are separate concerns.
+## Main challenges
 
-The guide connects these challenges to actual code and the validation checks.
+- Keeping obstacle positions lined up as the robot turns and moves.
+- Leaving enough room around obstacles for the whole robot.
+- Using the robot body's position for steering instead of the LiDAR's position.
+- Stopping when there is no route or the required data stops arriving.
 
-## Configuration
+The [design notes](docs/DECISIONS.md) explain these choices and the current limitations.
 
-Parameters are in each package's `config/params.yaml`. Defaults include 0.2-metre local cells, 0.25-metre global cells, 2-metre blocked clearance, 0.65-metre lookahead, 0.6 m/s maximum speed, and 0.35-metre goal tolerance. Rebuild the robot image after editing these files.
+## Testing and demo
 
-## Validation and demonstration
+The code built successfully and passed 20 algorithm checks. The robot reached four tested destinations in Gazebo, and a goal inside an obstacle kept it stopped. Live Foxglove runs were recorded in Chrome using OBS.
 
-See [VERIFICATION.md](docs/VERIFICATION.md) for the tested build, algorithm results, simulation destinations, and any unverified UI steps. Evidence is local. Status statements should be updated when the code or configuration changes.
+See [test results](docs/VERIFICATION.md) for the evidence and [recording setup](docs/CLEAN-RECORDING.md) for the display settings. The MP4 videos are saved separately and are not included here.
 
-Verified: successful C++ build, 20 algorithm checks, actual receipt of the warm-up messages, four reached simulation destinations, stopped behaviour, and local Foxglove bridge streaming. Live visualization was subsequently verified in Chrome and recorded with OBS. A separate cleaner recording shows a trip to (-10, -11) and a confirmed stop. See the verification report for the recording-run timeout and continuation details.
+![Replay of recorded robot positions](evidence/telemetry-replay.gif)
 
-For the cleaner display, import `config/clean-demo.foxglove.json` and select Dark appearance in Foxglove. The MP4 recordings are saved separately in the local outputs folder and are not uploaded with this repository.
+This animation uses recorded robot positions. It is not the Foxglove screen recording.
 
-![Recorded navigation replay](evidence/telemetry-replay.gif)
+## Limitations
 
-This animation replays actual recorded odometry; it is not a Foxglove screen capture. A full ROS recording is retained locally in `evidence/rosbag-demo/` but is excluded from Git because of its size. The MP4 screen recordings are also separate from the repository.
+This version is intended for the supplied room with stationary obstacles. Old obstacle marks stay in the map until it is reset. The map has a fixed size, and the robot does not have a recovery strategy for every situation where it gets stuck.
 
-## Known limitations
+## Credits
 
-The mapper retains the highest observed cost, so it cannot clear moved obstacles or persistent false detections. The map has fixed bounds. The circular footprint is conservative. The robot has no recovery behaviour for every possible dead end or control failure. This is a static-world assignment implementation, not production autonomous driving software.
-
-## Credits and assistance
-
-- WATonomous: assignment, original repository, simulation, infrastructure, and starter layout.
-- AI assistance: navigation implementation, tests, debugging, and explanatory material in this local version.
-
-## License
-
-See [LICENSE](LICENSE), retained from the upstream repository.
+- WATonomous provided the assignment, starter code, and simulation. [Assignment instructions](https://wiki.watonomous.ca/admission_assignments/asd_admission_assignment/).
+- AI assistance was used for the navigation code, tests, debugging, and documentation.
+- The original [Apache 2.0 license](LICENSE) is retained.

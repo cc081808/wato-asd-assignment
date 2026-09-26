@@ -1,60 +1,40 @@
-# Design choices, challenges, and limitations
+# Design notes
 
-## Separate communication from mathematics
+## Keeping the map lined up
 
-Each of the four packages has a `*_node` class for subscriptions, publishers, and timers and a `*_core` class for the algorithm. Core functions can be tested using constructed messages without running Gazebo. This follows the starter's intended organization.
+LiDAR readings start relative to the sensor. Map memory uses the sensor's position and rotation to place them in the world map. The map, goals, and route all use the same frame, `sim_world`.
 
-## Use the actual simulation frame
+The position helper was changed to report the robot body's position instead of the front-mounted LiDAR's position. This gives the controller a more suitable point to steer from.
 
-The upstream odometry helper reports the LiDAR pose in `sim_world`. We changed its target to the `robot` model frame, so planning and control track the body/drive reference. The global map, goals, and paths use `sim_world` consistently. Goals in other frames are rejected with a warning. The local grid keeps the incoming scan frame. Map memory independently uses the sensor's TF at scan time, accounting for displacement and rotation.
+## Leaving room around obstacles
 
-## Preserve static obstacles conservatively
+The robot is large, so planning a line that just misses an obstacle is not enough. The costmap adds a 2-metre blocked area around each obstacle, with an extra band out to 2.6 metres that makes nearby routes less attractive.
 
-The tutorial suggests overwriting known observations. This implementation instead keeps the highest observed cost in each global cell. That prevents a later free beam or partial view from erasing a previously inflated obstacle boundary. It is suitable for this static simulated room, but noisy detections can leave persistent marks and moved obstacles will not clear. Restarting map memory resets the map.
+This is a simple way to leave room for the body, but it also rules out some narrow gaps the robot might otherwise fit through.
 
-A more general mapper would retain raw occupancy evidence separately, clear free space probabilistically, and recompute inflation after fusion. That is a useful extension, not implemented here.
+## Remembering obstacles
 
-## Update while stationary as well as moving
+Map memory keeps the highest obstacle value seen in each square. This helps avoid accidentally erasing an obstacle after the robot passes it. The map updates every 0.25 seconds, even when the robot is stopped.
 
-The assignment's examples contain both 1.5-metre and 5-metre update thresholds. This version uses a 250-ms timer to merge the latest available observation, including while stationary or rotating. This avoids delaying detection until the robot travels a large distance. The initial empty map is published with retained delivery so a newly started planner can receive it.
+The downside is that false detections and moved obstacles leave marks behind. Restarting the robot service clears the map. The map also has fixed limits of about -20 to 20 metres in each direction.
 
-## Account for a large, offset robot
+## Finding and following a route
 
-The simulated chassis is 2 metres long, offset forward from the model frame, and the LiDAR sits farther forward. A 2-metre circular clearance radius conservatively covers the robot about the model reference point, including a margin. The outer 2.6-metre band makes nearby routes more expensive. This sacrifices tight passages for easier, more reliable avoidance.
+A* searches the grid for a route and avoids cutting diagonally between blocked corners. Unknown areas are allowed but cost more to travel through. The planner checks for a new route every 0.5 seconds while a goal is active.
 
-An initial integration run exposed why the reference point matters: the front-mounted sensor began inside the conservative margin around the central obstacle, although the robot body had room to move. Reporting the model pose solves that mismatch and makes Pure Pursuit's reference consistent with the drive geometry. An explicit oriented footprint could reclaim some of the space lost to circular inflation.
+Pure Pursuit steers towards a point 0.65 metres ahead on the route. The maximum speed is 0.6 m/s, and the controller stops within 0.35 metres of the goal. These values are in each package's `config/params.yaml`.
 
-## Unknown is allowed, with a cost
+## Stopping and limitations
 
-Blocking all unknown space can prevent travel to an unseen goal. We allow unknown cells with a factor-of-two movement cost. Inflated cells below 100 also increase cost; cells at 100 are blocked. The planner searches every 500 ms while a goal is active. It retains an unreachable goal and retries as the map changes; it accepts a replacement goal at any time.
+An empty route or missing input makes the controller send a stop command. It also stops if required messages have not arrived for 1.5 seconds, and checks for obstacles directly ahead using LiDAR.
 
-This is basic navigation, not a dedicated exploration strategy. Some unreachable goals will remain waiting indefinitely. Empty paths keep the controller stopped.
+These checks have limits: repeated old messages can still appear current, and the forward check does not cover the robot's full turning motion. Some unreachable goals may leave it waiting indefinitely. The tests do not cover every possible failure.
 
-## Bounded map
+## Possible improvements
 
-The fixed global map spans approximately `[-20,20)` metres in both directions, enough for the supplied room. Out-of-bounds observations are ignored and out-of-bounds goals yield no route. The map does not grow dynamically.
+- Clear old obstacle marks when an area becomes empty.
+- Use the robot's actual shape instead of a circle for clearance.
+- Add a way to recover when the robot gets stuck.
+- Test more starting positions and environments.
 
-## Stopping behaviour
-
-The control node publishes a zero command for an empty route, missing input, mismatched path/odometry frames, or input receipt older than 1.5 seconds. It also uses a short forward LiDAR guard. Arrival uses a 0.35-metre tolerance. The planner and controller share that tolerance.
-
-The watchdog observes message receipt, not independent validation of sensor timestamps. A process repeatedly publishing stale measurements can evade it. The forward guard is not a full swept-footprint collision predictor. These are limitations for future work.
-
-## Local environment and reproducibility
-
-`compose.learning.yaml` uses a separate Compose project, ROS domain 67, Gazebo partition, and loopback Foxglove port 8766. This preserves the user's original running assignment. It reuses the official prebuilt runtime images already present locally and builds the new C++ into a new image.
-
-The upstream `watod` build remains available, with separate local project and port names. Use one launch method at a time. The convenience images use the mutable `main` tag; the verification report records the tested environment, but exact long-term reproducibility would require pinning image digests.
-
-## Authorship
-
-This implementation and its documentation were prepared with AI assistance. The original assignment, infrastructure, simulation, and starter layout are WATonomous work. See the root LICENSE and official repository.
-
-## Future improvements
-
-- Probabilistic occupancy updates and proper clearing of moved obstacles.
-- Explicit robot footprint and axle-centred controller geometry.
-- Progress-based recovery for a robot stuck near an obstacle.
-- Dynamic map size and transforms for goals from arbitrary frames.
-- Timestamp-based sensor health checks and a swept-path collision check.
-- Tuning and performance measurements across more worlds and initial poses.
+The project follows the starter's split between ROS communication (`*_node`) and calculations (`*_core`). AI assistance was used for implementation and documentation; the starter and simulation are WATonomous work.
