@@ -43,10 +43,6 @@ The code built successfully and passed 20 algorithm checks. The robot reached fo
 
 See [test results](docs/VERIFICATION.md) for the evidence and [recording setup](docs/CLEAN-RECORDING.md) for the display settings. The MP4 videos are saved separately and are not included here.
 
-![Replay of recorded robot positions](evidence/telemetry-replay.gif)
-
-This animation uses recorded robot positions. It is not the Foxglove screen recording.
-
 ## Limitations
 
 This version is intended for the supplied room with stationary obstacles. Old obstacle marks stay in the map until it is reset. The map has a fixed size, and the robot does not have a recovery strategy for every situation where it gets stuck.
