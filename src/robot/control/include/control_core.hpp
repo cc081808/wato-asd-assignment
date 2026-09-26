@@ -1,20 +1,13 @@
-#ifndef CONTROL_CORE_HPP_
-#define CONTROL_CORE_HPP_
-
-#include "rclcpp/rclcpp.hpp"
-
-namespace robot
-{
-
+#pragma once
+#include <nav_msgs/msg/path.hpp>
+#include <geometry_msgs/msg/twist.hpp>
+namespace robot {
 class ControlCore {
-  public:
-    // Constructor, we pass in the node's RCLCPP logger to enable logging to terminal
-    ControlCore(const rclcpp::Logger& logger);
-  
-  private:
-    rclcpp::Logger logger_;
+ public:
+  ControlCore(double speed = 0.6, double lookahead = 0.65, double tolerance = 0.35);
+  geometry_msgs::msg::Twist command(const nav_msgs::msg::Path& path,
+                                   const geometry_msgs::msg::Pose& pose) const;
+ private:
+  double speed_, lookahead_, tolerance_;
 };
-
-} 
-
-#endif 
+}

@@ -1,0 +1,23 @@
+{
+  "websocket_upgrade": true,
+  "server": "",
+  "topics": [
+    "/camera",
+    "/camera_info",
+    "/cmd_vel",
+    "/costmap",
+    "/foxglove_bridge/sysinfo",
+    "/goal_point",
+    "/imu",
+    "/lidar",
+    "/map",
+    "/model/robot/odometry",
+    "/odom/filtered",
+    "/parameter_events",
+    "/path",
+    "/rosout",
+    "/tf",
+    "/tf_static"
+  ],
+  "lidar_binary_message_received": true
+}

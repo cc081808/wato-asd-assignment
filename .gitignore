@@ -3,3 +3,13 @@ __pycache__
 .vscode/
 
 watod-config.local.sh
+
+# Generated ROS build output and local recordings
+build/
+install/
+log/
+*.db3
+*.mcap
+*.mp4
+*.mov
+*.zip

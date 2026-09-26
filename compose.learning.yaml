@@ -1,0 +1,25 @@
+name: asd_learning
+services:
+  robot:
+    build:
+      context: .
+      dockerfile: docker/robot/learning.Dockerfile
+    image: asd-learning-robot:local
+    environment:
+      ROS_DOMAIN_ID: "67"
+    volumes:
+      - ./scripts:/assignment-scripts:ro
+  gazebo:
+    image: ghcr.io/watonomous/wato_asd_training/gazebo_server:main
+    environment:
+      ROS_DOMAIN_ID: "67"
+      IGN_PARTITION: "asd_learning"
+      LIBGL_ALWAYS_SOFTWARE: "1"
+    command: ["bash", "-lc", "source /opt/watonomous/setup.bash && ros2 launch gazebo sim.launch.py"]
+  foxglove:
+    image: ghcr.io/watonomous/wato_asd_training/infrastructure_foxglove:main
+    environment:
+      ROS_DOMAIN_ID: "67"
+    ports:
+      - "127.0.0.1:8766:8766"
+    command: ["ros2", "launch", "foxglove_bridge", "foxglove_bridge_launch.xml", "port:=8766"]

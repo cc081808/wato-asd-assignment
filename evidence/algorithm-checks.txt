@@ -1,0 +1,21 @@
+PASS: laser return is occupied
+PASS: beam marks observed free space
+PASS: space behind obstacle remains unknown
+PASS: robot clearance blocks nearby cells
+PASS: NaN does not invent observations
+PASS: positive infinity clears beam up to maximum range
+PASS: 90-degree rotation and translation place obstacle correctly
+PASS: unknown observations preserve memory
+PASS: out-of-bounds observations are ignored
+PASS: A* finds a detour around a wall
+PASS: detour uses free cells through the actual opening
+PASS: sealed wall produces no path
+PASS: outside start is rejected
+PASS: occupied goal is rejected
+PASS: diagonal cannot cut between two blocked cells
+PASS: unknown space is traversable under the documented policy
+PASS: straight path commands forward motion
+PASS: target on left turns left before driving
+PASS: arrival commands a complete stop
+PASS: empty path commands a complete stop
+20 behavioural checks passed

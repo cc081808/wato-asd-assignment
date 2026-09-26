@@ -20,10 +20,9 @@ OdometrySpoofNode::OdometrySpoofNode() : Node("odometry_spoof") {
 }
 
 void OdometrySpoofNode::timerCallback() {
-  // We'll look up the transform from sim_world -> robot/chassis/lidar, 
-  // note robot frame is usually not the lidar sensor, but we do so to make this
-  // assignment easier
-  const std::string target_frame = "robot/chassis/lidar";
+  // Navigate at the model/drive reference, not the forward-mounted LiDAR.
+  // Map memory independently transforms each scan from its own sensor frame.
+  const std::string target_frame = "robot";
   const std::string source_frame = "sim_world";
 
   geometry_msgs::msg::TransformStamped transform_stamped;

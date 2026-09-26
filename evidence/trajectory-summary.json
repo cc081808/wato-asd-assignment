@@ -1,0 +1,12 @@
+{
+  "sample_count": 1784,
+  "duration_seconds": 178.30104660987854,
+  "minimum_reference_point_clearance_m": 2.34847228856297,
+  "conservative_body_radius_m": 1.5811388300841898,
+  "last_command": [
+    0.0,
+    0.0
+  ],
+  "note": "Sampled geometric check against the static world; not a contact-sensor collision log.",
+  "minimum_bounding_circle_margin_m": 0.7673334584787803
+}

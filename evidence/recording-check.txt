@@ -1,0 +1,17 @@
+stdin is not a terminal device. Keyboard handling disabled.[INFO] [1790392105.230820918] [rosbag2_recorder]: Press SPACE for pausing/resuming
+[INFO] [1790392105.245068550] [rosbag2_storage]: Opened database '/tmp/asd-learning-demo/asd-learning-demo_0.db3' for READ_WRITE.
+[INFO] [1790392105.248289940] [rosbag2_recorder]: Listening for topics...
+[INFO] [1790392105.251274404] [rosbag2_recorder]: Event publisher thread: Starting
+[INFO] [1790392105.253567757] [rosbag2_recorder]: Subscribed to topic '/tf'
+[INFO] [1790392105.274456838] [rosbag2_recorder]: Subscribed to topic '/path'
+[INFO] [1790392105.276295708] [rosbag2_recorder]: Subscribed to topic '/odom/filtered'
+[INFO] [1790392105.277643406] [rosbag2_recorder]: Subscribed to topic '/map'
+[INFO] [1790392105.279930712] [rosbag2_recorder]: Subscribed to topic '/lidar'
+[INFO] [1790392105.281454580] [rosbag2_recorder]: Subscribed to topic '/costmap'
+[INFO] [1790392105.283097497] [rosbag2_recorder]: Subscribed to topic '/cmd_vel'
+[INFO] [1790392105.283238625] [rosbag2_recorder]: Recording...
+[INFO] [1790392105.285225266] [rosbag2_recorder]: Subscribed to topic '/goal_point'
+{"goal": [-10, -11], "reached": true, "final": [-10.234589714284443, -10.769385602861206], "stopped": true}
+[INFO] [1790392225.871071037] [rosbag2_cpp]: Writing remaining messages from cache to the bag. It may take a while
+[INFO] [1790392225.876240167] [rosbag2_recorder]: Event publisher thread: Exiting
+[INFO] [1790392225.877557759] [rosbag2_recorder]: Recording stopped

@@ -1,0 +1,7 @@
+ Container asd_learning-robot-run-a7b319613893 Creating
+ Container asd_learning-robot-run-a7b319613893 Created
+[INFO] [1790391597.978294113] [warmup_publisher]: Hello, ROS 2!
+[INFO] [1790391598.478277519] [warmup_publisher]: Hello, ROS 2!
+[INFO] [1790391598.978280519] [warmup_publisher]: Hello, ROS 2!
+Warm-up received 3 messages: ['Hello, ROS 2!', 'Hello, ROS 2!', 'Hello, ROS 2!']; PASS=True
+[INFO] [1790391598.979080508] [rclcpp]: signal_handler(signum=2)

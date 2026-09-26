@@ -1,0 +1,23 @@
+cmake_minimum_required(VERSION 3.10)
+project(navigation_tests)
+set(CMAKE_CXX_STANDARD 17)
+add_compile_options(-Wall -Wextra -Wpedantic)
+find_package(ament_cmake REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+add_executable(warmup_publisher warmup_publisher.cpp)
+ament_target_dependencies(warmup_publisher rclcpp std_msgs)
+install(TARGETS warmup_publisher DESTINATION lib/${PROJECT_NAME})
+add_executable(navigation_checks navigation_checks.cpp
+  ../costmap/src/costmap_core.cpp ../map_memory/src/map_memory_core.cpp
+  ../planner/src/planner_core.cpp ../control/src/control_core.cpp)
+target_include_directories(navigation_checks PRIVATE
+  ../costmap/include ../map_memory/include ../planner/include ../control/include)
+ament_target_dependencies(navigation_checks nav_msgs sensor_msgs geometry_msgs)
+enable_testing()
+add_test(NAME navigation_checks COMMAND navigation_checks)
+install(TARGETS navigation_checks DESTINATION lib/${PROJECT_NAME})
+ament_package()

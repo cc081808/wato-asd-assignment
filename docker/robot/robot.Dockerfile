@@ -12,6 +12,7 @@ COPY src/robot/map_memory map_memory
 COPY src/robot/planner planner
 COPY src/robot/control control
 COPY src/robot/bringup_robot bringup_robot
+COPY src/robot/navigation_tests navigation_tests
 
 # Scan for rosdeps
 RUN apt-get -qq update && rosdep update && \

@@ -1,0 +1,10 @@
+{
+  "arrival_stop": true,
+  "unreachable_goal": [
+    0,
+    0
+  ],
+  "zero_commands": true,
+  "position_drift_m": 0.0,
+  "command_observations": 131
+}
